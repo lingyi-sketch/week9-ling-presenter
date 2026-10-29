@@ -137,10 +137,15 @@ const FOCUS_JS = ({ target, sentence }) => `(() => {
   const sentence = ${JSON.stringify(sentence || '')};
   const norm = s => (s || '').replace(/\\s+/g, '').toLowerCase();
   const root = document.querySelector('main') || document.body;
-  const els = [...root.querySelectorAll('h1,h2,h3,h4,h5,h6,p,li,figcaption,blockquote,a,span,div,img')]
+  const els = [...root.querySelectorAll('h1,h2,h3,h4,h5,h6,p,li,figcaption,blockquote,a,span,div,img,iframe')]
     .filter(el => el.offsetParent && el.getBoundingClientRect().height > 0);
   let best = null;
-  if (target) {
+  // "게임 화면", "게임 화면 2": 글자가 없는 끼워 넣은 화면(iframe)을 순서대로 가리킨다
+  const frame = target.match(/^게임 화면\\s*(\\d*)$/);
+  if (frame) best = els.filter(el => el.tagName === 'IFRAME')[(Number(frame[1]) || 1) - 1] || null;
+  // 사진은 대체 글자(alt)가 정확히 같을 때 먼저 고른다
+  if (!best && target) best = els.find(el => el.tagName === 'IMG' && norm(el.alt) === norm(target)) || null;
+  if (!best && target) {
     const t = norm(target);
     let bestLen = Infinity;
     for (const el of els) {
@@ -173,7 +178,8 @@ const FOCUS_JS = ({ target, sentence }) => `(() => {
   const r = best.getBoundingClientRect();
   const maxScroll = Math.max(0, document.documentElement.scrollHeight - innerHeight);
   const goal = Math.min(maxScroll, Math.max(0, scrollY + r.top - (innerHeight - Math.min(r.height, innerHeight)) / 2));
-  scrollTo({ top: goal, behavior: 'smooth' });
+  // 창이 가려져 있으면 부드러운 스크롤이 멈추므로 바로 이동한다
+  scrollTo({ top: goal, behavior: document.hidden ? 'auto' : 'smooth' });
   const top = r.top + scrollY - goal;
   return { left: r.left, right: r.right, top, bottom: top + r.height };
 })()`;
@@ -510,7 +516,11 @@ async function runIntro() {
     const bridge = lines.findIndex(l => l.bridge);
     await speak(lines.map(l => l.text), {
       onUnit: k => {
-        if (lines[k].focus) highlight({ target: lines[k].focus, sentence: lines[k].text });
+        const line = lines[k];
+        const show = () => line.focus && highlight({ target: line.focus, sentence: line.text });
+        // "↪ 이동: /경로" 가 붙은 문장은 그 문장을 말하면서 다른 페이지로 갔다가 강조한다
+        if (line.go && line.go !== currentPath()) navigate(line.go).then(() => state.presenting && show());
+        else show();
         // 다리 문장이 시작되면 다음 페이지로 출발
         if (k === bridge && next && next.path !== currentPath() && state.segIndex === myIndex) navPending = navigate(next.path);
       },
@@ -734,7 +744,8 @@ $('ask-form').onsubmit = e => {
 // 편집 형식: [번호] /경로, 한 줄에 한 문장, "★ 강조: 글자"는 바로 위 문장의 강조 대상, "» 문장"은 다리 문장
 function showScript() {
   $('script-view').value = state.segments.map((s, i) => {
-    const body = linesOf(s).map(l => (l.bridge ? '» ' : '') + l.text + (l.focus ? `\n★ 강조: ${l.focus}` : '')).join('\n');
+    const body = linesOf(s).map(l => (l.bridge ? '» ' : '') + l.text +
+      (l.go ? `\n↪ 이동: ${l.go}` : '') + (l.focus ? `\n★ 강조: ${l.focus}` : '')).join('\n');
     return `[${i + 1}] ${s.path}\n${body}`;
   }).join('\n\n');
 }
@@ -750,6 +761,8 @@ function parseScript(text) {
       if (!row) continue;
       const star = row.match(/^★\s*강조\s*[:：]\s*(.+)$/);
       if (star) { if (lines.length) lines[lines.length - 1].focus = star[1].trim(); continue; }
+      const go = row.match(/^↪\s*이동\s*[:：]\s*(\/\S*)$/);
+      if (go) { if (lines.length) lines[lines.length - 1].go = go[1]; continue; }
       const bridge = row.startsWith('»');
       lines.push({ text: row.replace(/^»\s*/, ''), ...(bridge ? { bridge: true } : {}) });
     }
