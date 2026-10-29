@@ -187,4 +187,4 @@ portfolio-presenter/
 | ElevenLabs 「목록 불러오기」 실패 | 키 권한에 Voices(Read)가 없음. elevenlabs.io › API Keys에서 권한 추가 |
 | ElevenLabs 목소리가 소리가 안 남(🔒) | 라이브러리 목소리는 무료 플랜에서 API로 쓸 수 없음(402). 기본 목소리를 고르거나 유료 플랜 |
 | "마이크에서 소리가 전혀 들어오지 않아요" | 키보드 마이크 끄기 키, Windows 설정 › 시스템 › 소리 › 입력 음량 확인 |
-| macOS에서 "열 수 없음" | 서명되지 않은 앱이므로 Finder에서 우클릭 › 열기 |
+| macOS에서 "열 수 없음"·"손상됨" | 서명되지 않은(ad-hoc) 앱이라 Gatekeeper가 막음. `xattr -cr "/Applications/Ling AI Presenter.app"` 실행, 또는 시스템 설정 › 개인정보 보호 및 보안 › 그래도 열기 (macOS 15+는 우클릭 › 열기 불가). Intel Mac은 x64 파일 사용 |

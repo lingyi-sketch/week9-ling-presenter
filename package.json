@@ -1,7 +1,7 @@
 {
   "name": "portfolio-presenter",
   "productName": "Ling AI Presenter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AI 캐릭터가 포트폴리오 사이트를 각색해서 소개하고, 질문에 답하는 발표 앱",
   "main": "src/main.js",
   "author": "Ling",
@@ -27,7 +27,9 @@
       "extendInfo": {
         "NSMicrophoneUsageDescription": "질문을 듣기 위해 마이크를 사용합니다."
       },
-      "identity": "-"
+      "identity": "-",
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     }
   },
   "devDependencies": {
