@@ -1,0 +1,27 @@
+# main 브랜치에 올릴 때마다 GitHub의 Mac 컴퓨터에서 Mac용 앱(zip)을 만든다.
+# 결과물: 저장소 › Actions › 해당 실행 › Artifacts 의 "Ling-AI-Presenter-mac"
+name: Build Mac app
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Apple 개발자 인증서가 없으므로 ad-hoc 서명만 한다 (처음 열 때 사용가이드의 Mac 안내 참고)
+      - run: npx electron-builder --mac zip --arm64 --x64 --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Ling-AI-Presenter-mac
+          path: dist/*.zip

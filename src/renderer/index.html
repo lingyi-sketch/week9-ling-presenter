@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data: blob:">
+  <title>Ling AI Presenter</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <webview id="site" allowpopups></webview>
+
+  <!-- 캐릭터 '링이' (오리지널 SVG) -->
+  <div id="avatar" class="idle">
+    <div id="bubble" class="hidden"><div id="bubble-text"></div></div>
+    <svg id="lingi" viewBox="0 0 160 170" aria-label="링이">
+      <!-- 슬레이트(클래퍼보드) 모자 -->
+      <g id="hat">
+        <rect x="46" y="18" width="68" height="20" rx="3" fill="#2b2b2b"/>
+        <g id="clap">
+          <rect x="44" y="6" width="72" height="12" rx="2" fill="#2b2b2b"/>
+          <path d="M52 6 l8 12 M68 6 l8 12 M84 6 l8 12 M100 6 l8 12" stroke="#f4efe6" stroke-width="5"/>
+        </g>
+        <text x="80" y="33" font-size="9" fill="#f4efe6" text-anchor="middle" font-family="sans-serif" font-weight="700">LING</text>
+      </g>
+      <!-- 몸 -->
+      <ellipse cx="80" cy="150" rx="40" ry="7" fill="rgba(0,0,0,.18)"/>
+      <path id="body" d="M80 34 C122 34 138 70 138 104 C138 136 112 148 80 148 C48 148 22 136 22 104 C22 70 38 34 80 34 Z"
+            fill="#fff4dc" stroke="#e8c98f" stroke-width="3"/>
+      <!-- 팔 -->
+      <path id="arm-l" d="M26 108 q-14 6 -12 18" stroke="#e8c98f" stroke-width="7" stroke-linecap="round" fill="none"/>
+      <path id="arm-r" d="M134 108 q14 6 12 18" stroke="#e8c98f" stroke-width="7" stroke-linecap="round" fill="none"/>
+      <!-- 얼굴 -->
+      <g id="face">
+        <g id="eyes">
+          <ellipse class="eye" cx="62" cy="88" rx="7" ry="9" fill="#2b2b2b"/>
+          <ellipse class="eye" cx="98" cy="88" rx="7" ry="9" fill="#2b2b2b"/>
+          <circle cx="64.5" cy="84.5" r="2.4" fill="#fff"/>
+          <circle cx="100.5" cy="84.5" r="2.4" fill="#fff"/>
+        </g>
+        <ellipse cx="50" cy="104" rx="8" ry="5" fill="#ffb4a2" opacity=".7"/>
+        <ellipse cx="110" cy="104" rx="8" ry="5" fill="#ffb4a2" opacity=".7"/>
+        <ellipse id="mouth" cx="80" cy="108" rx="8" ry="4" fill="#8a3b2e"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- 하단 조작 바 -->
+  <div id="controls">
+    <button id="btn-intro" title="소개 시작/정지 (F1)">▶ 소개 시작</button>
+    <button id="btn-next" title="다음 구간">⏭</button>
+    <button id="btn-mic" title="눌러서 말하고, 다시 눌러서 질문 보내기 (F2)">🎤 질문하기</button>
+    <form id="ask-form"><input id="ask-input" placeholder="또는 질문을 입력하고 Enter" autocomplete="off"></form>
+    <button id="btn-explain" title="가리켜서 설명 듣기: 켜고 페이지를 클릭 (F4)">👆</button>
+    <button id="btn-follow" class="on" title="마우스 따라다니기 켜기/끄기 (F3)">🐾</button>
+    <button id="btn-settings" title="설정">⚙</button>
+  </div>
+  <div id="status"></div>
+
+  <!-- 설정 -->
+  <div id="settings" class="hidden">
+    <div class="panel">
+      <h2>설정</h2>
+      <label>Gemini API 키
+        <input id="cfg-apiKey" type="password" placeholder="AIza... (aistudio.google.com 에서 발급)">
+      </label>
+      <label>포트폴리오 주소
+        <input id="cfg-portfolioUrl" type="url">
+      </label>
+      <div class="row">
+        <label>발표 언어
+          <select id="cfg-lang">
+            <option value="ko">한국어</option>
+            <option value="zh">中文</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <label>소개 길이(분)
+          <input id="cfg-introMinutes" type="number" min="1" max="10" step="0.5">
+        </label>
+      </div>
+      <div class="row">
+        <label>목소리
+          <select id="cfg-ttsMode">
+            <option value="auto">자동 (선택한 서비스 → 실패 시 OS 기본 음성)</option>
+            <option value="cloud">선택한 서비스만</option>
+            <option value="system">OS 기본 음성만</option>
+          </select>
+        </label>
+        <label>음성 서비스
+          <select id="cfg-ttsProvider">
+            <option value="gemini">Gemini</option>
+            <option value="elevenlabs">ElevenLabs</option>
+          </select>
+        </label>
+      </div>
+      <div class="row">
+        <label>ElevenLabs API 키
+          <input id="cfg-elevenKey" type="password" placeholder="sk_... (elevenlabs.io › API Keys)">
+        </label>
+        <label>ElevenLabs 목소리
+          <select id="cfg-elevenVoiceId"><option value="">(키 저장 후 「목록 불러오기」)</option></select>
+        </label>
+      </div>
+      <div class="row">
+        <label>ElevenLabs 모델 <input id="cfg-elevenModel"></label>
+        <label>&nbsp;<button id="btn-eleven-voices" type="button">목록 불러오기</button></label>
+      </div>
+      <p id="eleven-info" class="muted"></p>
+      <div class="row">
+        <label>Gemini 목소리
+          <select id="cfg-geminiVoice">
+            <option>Kore</option><option>Aoede</option><option>Leda</option><option>Zephyr</option>
+            <option>Puck</option><option>Charon</option><option>Fenrir</option><option>Orus</option>
+          </select>
+        </label>
+        <label>OS 기본 음성
+          <select id="cfg-systemVoice"></select>
+        </label>
+      </div>
+      <div class="row">
+        <label>LLM 모델 <input id="cfg-model"></label>
+        <label>TTS 모델 <input id="cfg-ttsModel"></label>
+      </div>
+      <label>캐릭터 성격 (프롬프트)
+        <textarea id="cfg-persona" rows="3"></textarea>
+      </label>
+      <div class="actions">
+        <button id="btn-test">연결 테스트</button>
+        <button id="btn-voice-test">목소리 듣기</button>
+        <button id="btn-recrawl">사이트 다시 읽기</button>
+        <button id="btn-newscript">소개 대본 새로 만들기</button>
+        <button id="btn-voices">발표 음성 미리 만들기</button>
+      </div>
+      <details id="script-box">
+        <summary>소개 대본 보기 · 고치기</summary>
+        <p class="muted">
+          [번호] 뒤에는 그 구간에서 보여 줄 페이지 경로를 적고, 다음 줄부터 <b>한 줄에 한 문장</b>씩 씁니다.<br>
+          <code>★ 강조: 화면 글자</code> → 바로 위 문장을 말하기 0.3초 전에 그 글자가 있는 부분을 강조합니다.<br>
+          <code>» 다리 문장</code> → 구간 마지막 문장. 이 문장을 말하기 시작할 때 다음 페이지로 넘어갑니다.
+        </p>
+        <textarea id="script-view" rows="16" placeholder="(아직 대본이 없어요. ▶ 소개 시작을 누르면 만들어집니다)"></textarea>
+        <div class="actions"><button id="btn-savescript">대본 저장</button></div>
+      </details>
+      <details id="faq-box">
+        <summary>맞장구 · 예상 질문 보기 · 고치기</summary>
+        <p class="muted">
+          <code># 맞장구</code> 아래 한 줄에 하나(질문을 보내자마자 재생), <code># 두 번째 맞장구</code>(답이 늦을 때 한 번),
+          <code># 예상 질문</code> 아래 <code>[번호] /경로</code>(비우면 페이지 이동 없음), <code>Q:</code>, <code>A:</code>, <code>★ 강조:</code> 순서로 씁니다. 미리 만든 답변은 한국어 질문에만 씁니다.
+        </p>
+        <textarea id="faq-view" rows="14"></textarea>
+        <div class="actions"><button id="btn-savefaq">맞장구·예상 질문 저장</button></div>
+      </details>
+      <p id="site-info" class="muted"></p>
+      <div class="actions end">
+        <button id="btn-cancel">닫기</button>
+        <button id="btn-save" class="primary">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

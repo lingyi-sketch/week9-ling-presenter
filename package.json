@@ -1,0 +1,37 @@
+{
+  "name": "portfolio-presenter",
+  "productName": "Ling AI Presenter",
+  "version": "1.0.0",
+  "description": "AI 캐릭터가 포트폴리오 사이트를 각색해서 소개하고, 질문에 답하는 발표 앱",
+  "main": "src/main.js",
+  "author": "Ling",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win portable",
+    "dist:mac": "electron-builder --mac zip",
+    "preset": "node scripts/export-preset.js"
+  },
+  "build": {
+    "appId": "me.ling.portfolio-presenter",
+    "files": [
+      "src/**/*",
+      "preset/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "portable"
+    },
+    "mac": {
+      "target": "zip",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "질문을 듣기 위해 마이크를 사용합니다."
+      },
+      "identity": "-"
+    }
+  },
+  "devDependencies": {
+    "electron": "^45.0.0",
+    "electron-builder": "^26.18.0"
+  }
+}

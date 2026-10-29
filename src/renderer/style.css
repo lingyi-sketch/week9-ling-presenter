@@ -1,0 +1,97 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #111; font-family: "Pretendard", "Malgun Gothic", "Apple SD Gothic Neo", "Microsoft YaHei", sans-serif; }
+
+#site { position: fixed; inset: 0; width: 100%; height: 100%; background: #fff; }
+
+/* ---------- 캐릭터 ---------- */
+#avatar { position: fixed; left: 0; top: 0; width: 120px; z-index: 10; pointer-events: none; will-change: transform; }
+#lingi { width: 120px; height: auto; display: block; filter: drop-shadow(0 6px 10px rgba(0,0,0,.25)); }
+#avatar .eye { transform-box: fill-box; transform-origin: center; animation: blink 4.5s infinite; }
+@keyframes blink { 0%, 95%, 100% { transform: scaleY(1); } 97% { transform: scaleY(.1); } }
+
+#mouth { transform-box: fill-box; transform-origin: center; transition: transform .06s; }
+#avatar.speaking-css #mouth { animation: talk .22s infinite alternate; }
+@keyframes talk { from { transform: scaleY(.6); } to { transform: scaleY(2.4); } }
+
+#lingi { animation: bob 2.4s ease-in-out infinite; }
+@keyframes bob { 50% { translate: 0 -4px; } }
+#avatar.thinking #eyes { transform: translateY(-4px); transition: transform .3s; }
+#avatar.thinking #clap { animation: clap .5s infinite alternate; transform-origin: 46px 18px; }
+@keyframes clap { to { transform: rotate(-14deg); } }
+#avatar.listening #arm-r { transform: translate(-6px, -18px) rotate(-30deg); transform-origin: 134px 108px; transform-box: view-box; }
+#avatar.listening #lingi { animation: bob .8s ease-in-out infinite; }
+
+/* 말풍선 */
+#bubble {
+  position: absolute; bottom: 100%; left: 50%; margin-bottom: 8px;
+  width: max-content; max-width: min(460px, 70vw);
+  background: #fff; color: #222; border: 2px solid #2b2b2b; border-radius: 16px;
+  padding: 12px 16px; font-size: 18px; line-height: 1.55;
+  box-shadow: 0 8px 24px rgba(0,0,0,.18);
+  transform: translateX(var(--bubble-shift, -50%));
+}
+#bubble::after {
+  content: ""; position: absolute; top: 100%; left: var(--tail, 50%);
+  border: 10px solid transparent; border-top-color: #2b2b2b; transform: translateX(-50%);
+}
+#bubble.hidden { display: none; }
+#bubble .q { display: block; font-size: 14px; color: #8a6d3b; margin-bottom: 6px; }
+#bubble.dots #bubble-text::after { content: ""; animation: dots 1.2s steps(4) infinite; }
+@keyframes dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
+
+/* ---------- 조작 바 ---------- */
+#controls {
+  position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 20;
+  display: flex; gap: 8px; align-items: center;
+  background: rgba(20,20,20,.88); padding: 8px; border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(0,0,0,.35); backdrop-filter: blur(6px);
+  opacity: .35; transition: opacity .2s;
+}
+#controls:hover, #controls:focus-within, body.busy #controls { opacity: 1; }
+#controls button { white-space: nowrap; }
+#controls button, .panel button {
+  border: 0; border-radius: 10px; padding: 9px 14px; font-size: 15px; cursor: pointer;
+  background: #333; color: #f4efe6; font-family: inherit;
+}
+#controls button:hover, .panel button:hover { background: #444; }
+#controls button:disabled { opacity: .4; cursor: default; }
+#btn-intro { background: #e8c98f; color: #222; font-weight: 700; }
+#btn-intro:hover { background: #f1d7a6; }
+#btn-mic.recording { background: #d9483b; color: #fff; animation: pulse 1s infinite; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 6px rgba(217,72,59,.35); } }
+#btn-follow:not(.on) { opacity: .5; }
+#btn-explain.on { background: #e8c98f; color: #222; }
+#ask-input {
+  width: 220px; border: 0; border-radius: 10px; padding: 9px 12px; font-size: 15px;
+  background: #262626; color: #f4efe6; font-family: inherit; outline: none;
+}
+
+#status {
+  position: fixed; left: 50%; bottom: 76px; transform: translateX(-50%); z-index: 20;
+  background: rgba(20,20,20,.9); color: #f4efe6; padding: 8px 14px; border-radius: 10px;
+  font-size: 14px; max-width: 80vw; display: none;
+}
+#status.show { display: block; }
+#status.error { background: #8e2b22; }
+
+/* ---------- 설정 ---------- */
+#settings { position: fixed; inset: 0; z-index: 30; background: rgba(0,0,0,.5); display: grid; place-items: center; }
+#settings.hidden { display: none; }
+.panel {
+  width: min(640px, 92vw); max-height: 90vh; overflow: auto;
+  background: #1c1c1c; color: #f4efe6; border-radius: 16px; padding: 20px 24px;
+}
+.panel h2 { margin: 0 0 12px; font-size: 20px; }
+.panel label { display: block; font-size: 13px; color: #c9c2b6; margin: 10px 0; flex: 1; }
+.panel input, .panel select, .panel textarea {
+  display: block; width: 100%; margin-top: 4px; padding: 8px 10px; font-size: 14px;
+  background: #2a2a2a; color: #f4efe6; border: 1px solid #3a3a3a; border-radius: 8px; font-family: inherit;
+}
+.panel .row { display: flex; gap: 12px; }
+.panel .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.panel .actions.end { justify-content: flex-end; }
+.panel button.primary { background: #e8c98f; color: #222; font-weight: 700; }
+.panel details { margin-top: 14px; font-size: 14px; }
+#script-view { line-height: 1.6; font-size: 13px; }
+.panel pre { white-space: pre-wrap; background: #262626; padding: 10px; border-radius: 8px; max-height: 240px; overflow: auto; font-family: inherit; font-size: 13px; line-height: 1.6; }
+.muted { color: #8f897f; font-size: 12px; }

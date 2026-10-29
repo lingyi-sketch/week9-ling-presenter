@@ -1,0 +1,7 @@
+{
+  "ttsProvider": "elevenlabs",
+  "elevenVoiceId": "hpp4J3VqNfWAUOO0d1Us",
+  "elevenModel": "eleven_multilingual_v2",
+  "ttsModel": "gemini-3.8-flash-tts",
+  "geminiVoice": "Leda"
+}
