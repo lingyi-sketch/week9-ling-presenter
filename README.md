@@ -5,6 +5,7 @@
 
 - 대상 사이트: https://my-new-portfolio-ling-d2f5.vercel.app/
 - 사람용 사용 설명서: [사용가이드.md](사용가이드.md)
+- 실행 파일(Windows exe · Mac zip): https://github.com/lingyi-sketch/week9-ling-presenter/releases/latest
 - 기획 문서
   - 처음 기획: [.scratch/ai-presenter/destination-and-requirements.md](.scratch/ai-presenter/destination-and-requirements.md)
   - 자연스러움 개선 (`/wayfinder`로 결정한 지도와 티켓): [.scratch/naturalness/map.md](.scratch/naturalness/map.md)
